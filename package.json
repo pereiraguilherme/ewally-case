@@ -1,0 +1,20 @@
+{
+  "name": "rabbit",
+  "version": "0.0.1",
+  "description": "API to query files on MongoDB database",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon  ./src/index.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pereiraguilherme/ewally-case.git"
+  },
+  "author": "Guilherme Silva",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jest": "^27.2.5",
+    "nodemon": "^2.0.13"
+  }
+}
