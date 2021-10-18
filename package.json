@@ -1,5 +1,5 @@
 {
-  "name": "rabbit",
+  "name": "case",
   "version": "0.0.1",
   "description": "API to query files on MongoDB database",
   "main": "index.js",
