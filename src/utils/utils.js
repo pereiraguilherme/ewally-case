@@ -1,47 +1,82 @@
 function isBarcodeValid(barcode) {
-    const barcodeArray = barcode.split("");
-    
-    if (barcodeArray.length > 44) {
+    const barcodeArray = barcode.split("").map(Number);
+
+    if (barcodeArray.length > 44 || barcodeArray.length < 44) {
+        return {
+            isValid: false,
+            message: 'Incorrect digits amount'
+        }
+    } else {
+        if (isConvenio(barcodeArray)) {
+            return {
+                isValid: true,
+                message: 'Convenio'
+            };
+        } else if (isTitulo(barcodeArray)) {
+            return {
+                isValid: true,
+                message: 'Titulo'
+            };
+        }
+        return {
+            isValid: false,
+            message: 'This is not a valid barcode'
+        };
+    }
+}
+
+function isTitulo(barcodeArray) {
+    let originalDV = 0;
+    const barcode43 = barcodeArray.map((element, index) => {
+        if (index === 4) {
+            originalDV = element;
+            return null
+        }
+        return element
+    }).filter(e => e !== null);
+
+    if (barcode43.length < 43) return false
+
+    const adder = (sum, value) => sum + value;
+    let barcodeSum = multiplyMultipliers(barcode43).reduce(adder);
+    const mod = barcodeSum % 11;
+
+    const possibleDV = 11 - mod;
+
+    if (!possibleDV) {
         return false;
     } else {
-
-        const titulo = false;
-        if (titulo) {
-        } else {
-            const originalValidationDigit = barcodeArray[4];
-            console.log(barcodeArray)
-            const barcode43 = barcodeArray.map((element, index) => {
-                if(index === 3){
-                    
-                }
-                return element
-            });
-            console.log(barcode43);
-            const adder = (sum, value) => sum + value;
-
-            let barcodeSum = multiplyMultipliers(barcode43).reduce(adder);
-            const barcodeSumMod = barcodeSum % 11;
-            let possibleValidationDigit = 0;
-
-            switch (possibleValidationDigit) {
-                case (11 - barcodeSumMod) === 10:
-                    possibleValidationDigit = 1;
-                    break;
-                case (11 - barcodeSumMod) === (0 || 1):
-                    possibleValidationDigit = 0;
-                    break;
-                default:
-                    possibleValidationDigit = (11 - barcodeSumMod);
-                    break;
-            }
-
-            if (originalValidationDigit === possibleValidationDigit) {
-                return true;
-            }
-            return false;
+        if ((possibleDV === 11) || (possibleDV === 10) || (possibleDV === 0)) {
+            if (originalDV === 1) return true;
+        } else if (originalDV === possibleDV) {
+            return true;
         }
+        return false;
     }
+}
 
+function isConvenio(barcodeArray) {
+    let originalDV = 0;
+    const barcode43 = barcodeArray.map((element, index) => {
+        if (index === 3) {
+            originalDV = 0;
+            return null
+        }
+        return element
+    }).filter(e => e !== null);
+
+    if (barcode43.length < 43) return false
+
+    const adder = (sum, value) => sum + value;
+    let barcodeSum = multiplyMultipliers(barcode43).reduce(adder);
+    const mod = barcodeSum % 11;
+
+    if ((mod === 0) || (mod === 1)) {
+        if (originalDV === 0) return true
+    } else if (mod === 10) {
+        if (originalDV === 1) return true
+    }
+    return false
 }
 
 function multiplyMultipliers(barcode43) {
@@ -61,16 +96,44 @@ function multiplyMultipliers(barcode43) {
     }
 }
 
-function getbarcodeInfo(barcode) {
-    return {
-        amount: 0.0,
-        expirationDate: Date(),
-        barcode
+function getBarcodeInfo(barcode, barcodeType) {
+    const barcodeArray = barcode.split("").map(Number);
+    let value = 'R$';
+    let expirationDate = 'XX/XX/XX';
+    if (barcodeType === 'Titulo') {
+        value = value + barcodeArray.slice(9, 17).join('') + ',' + barcodeArray.slice(18, 20).join('');
+        if(value !== 'R$999999999,99'){
+            const calculatedDate = getExpirationDate(barcodeArray.slice(5, 9).join(''));
+            
+            expirationDate = calculatedDate.getFullYear() + '/' + (Number(calculatedDate.getMonth()) + 1) + '/' + calculatedDate.getDate();
+        }
+    } else if (barcodeType === 'Convenio') {
+        value = value + barcodeArray.slice(4, 13).join('') + ',' + barcodeArray.slice(13,15).join('');
+
+        if(barcodeArray.slice(24, 31) !== new Array(8).fill(0)){
+            expirationDate = barcodeArray.slice(24,28).join('')+ '/' + barcodeArray.slice(28,29)+ '/' + barcodeArray.slice(30,31).join('');
+        }
+        
     }
+    return {
+        value,
+        expirationDate,
+        barcode
+    };
+}
+
+function getExpirationDate(factor) {
+    const baseDate = new Date(1997, 10, 7);
+    let expirationDate = baseDate;
+    expirationDate.setDate(baseDate.getDate() + Number(factor));
+    return expirationDate;
 }
 
 module.exports = {
     isBarcodeValid,
-    getbarcodeInfo,
-    multiplyMultipliers
+    getBarcodeInfo,
+    multiplyMultipliers,
+    isTitulo,
+    isConvenio,
+    getExpirationDate
 }

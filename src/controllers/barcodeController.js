@@ -6,16 +6,16 @@ const Utils = require('../utils/utils')
  * @param {*} res 
  */
 exports.view = function (req, res) {
-    const isbarcodeValid = Utils.barcodeValidation(req.params.barcode);
-    if (isbarcodeValid) {
-        const barcodeInfo = Utils.getBarcodeInfo(req.params.barcode);
+    const isbarcodeValid = Utils.isBarcodeValid(req.params.barcode);
+    if (isbarcodeValid.isValid) {
+        const barcodeInfo = Utils.getBarcodeInfo(req.params.barcode, isbarcodeValid.message);
         res.json({
-            message: "Barcode is valid!",
+            message: isbarcodeValid.message,
             ...barcodeInfo
         });
     } else {
         res.status(400).send({
-            message: "Barcode is not valid!",
+            message: isbarcodeValid.message,
             barcode: req.params.barcode
         });
     }
